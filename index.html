@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#8b5cf6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.json">
+  <title>小小ㄥㄑㄇ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(160deg, #fdf4ff 0%, #f0f9ff 50%, #fefce8 100%);
+      min-height: 100dvh; color: #334155; overflow-x: hidden;
+    }
+    .app { max-width: 960px; margin: 0 auto; padding: 16px 14px 110px; min-height: 100dvh; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .logo { font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .progress-pill { background: white; padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 5px; }
+    .progress-pill .star { color: #f59e0b; }
+    .goal { background: white; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .goal-left { font-size: 15px; font-weight: 600; }
+    .goal-left span { color: #8b5cf6; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .card { background: white; border-radius: 20px; padding: 14px 10px 12px; text-align: center; box-shadow: 0 3px 12px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.12s; position: relative; overflow: hidden; }
+    .card:active { transform: scale(0.95); }
+    .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; }
+    .card:nth-child(4n+1)::before { background: #f472b6; }
+    .card:nth-child(4n+2)::before { background: #60a5fa; }
+    .card:nth-child(4n+3)::before { background: #34d399; }
+    .card:nth-child(4n+4)::before { background: #fbbf24; }
+    .zhuyin { font-size: 48px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+    .word { font-size: 14px; color: #64748b; margin-bottom: 6px; }
+    .stars { display: flex; justify-content: center; gap: 2px; font-size: 14px; }
+    .stars .filled { color: #f59e0b; }
+    .stars .empty { color: #e2e8f0; }
+    .nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; box-shadow: 0 -2px 12px rgba(0,0,0,0.06); z-index: 100; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: #94a3b8; padding: 6px 0; border-radius: 10px; cursor: pointer; }
+    .nav-item.active { color: #7c3aed; background: #f5f3ff; }
+    .nav-item .icon { font-size: 20px; }
+    .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8); background: rgba(0,0,0,0.78); color: white; padding: 14px 24px; border-radius: 16px; font-size: 18px; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 200; }
+    .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .view { display: none; }
+    .view.active { display: block; }
+    .quiz, .progress-view { background: white; border-radius: 20px; padding: 20px; margin: 10px 0; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .quiz button, .big-btn { background: #8b5cf6; color: white; border: none; padding: 14px 28px; border-radius: 16px; font-size: 18px; margin: 8px; cursor: pointer; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .option { background: #f8fafc; padding: 20px; border-radius: 16px; font-size: 32px; cursor: pointer; border: 2px solid transparent; }
+    .option.correct { border-color: #22c55e; background: #dcfce7; }
+    .option.wrong { border-color: #ef4444; background: #fee2e2; }
+    @media (min-width: 640px) { .grid { grid-template-columns: repeat(4, 1fr); } .zhuyin { font-size: 56px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">小小ㄥㄑㄇ</div>
+      <div class="progress-pill"><span class="star">★</span><span id="progress-text">0 / 37</span></div>
+    </header>
+
+    <div id="view-learn" class="view active">
+      <div class="goal">
+        <div class="goal-left">今日目標：再學 <span>5</span> 個注音</div>
+        <div id="goal-stars">★★★☆☆</div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div id="view-quiz" class="view">
+      <div class="quiz">
+        <h2 style="margin-bottom:12px;">聽音辨字</h2>
+        <div id="quiz-prompt" style="font-size:20px; margin:16px 0;">準備好了嗎？</div>
+        <button id="start-quiz" class="big-btn">開始練習</button>
+        <div id="quiz-options" class="options" style="display:none;"></div>
+        <div id="quiz-score" style="margin-top:16px; font-size:18px;"></div>
+      </div>
+    </div>
+
+    <div id="view-progress" class="view">
+      <div class="progress-view">
+        <h2>我的進度</h2>
+        <p id="progress-detail" style="margin:16px 0; font-size:18px;">載入中...</p>
+        <button onclick="resetProgress()" class="big-btn" style="background:#ef4444;">重置進度</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-item active" data-view="learn"><div class="icon">📖</div><div>學習</div></div>
+    <div class="nav-item" data-view="quiz"><div class="icon">🎧</div><div>聽音</div></div>
+    <div class="nav-item" data-view="progress"><div class="icon">⭐</div><div>進度</div></div>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const allSymbols = [
+      { z: "ㄥ", word: "爸爸" }, { z: "ㄑ", word: "婆婆" }, { z: "ㄇ", word: "媽媽" }, { z: "ㄈ", word: "風" },
+      { z: "ㄉ", word: "弟弟" }, { z: "ㄚ", word: "兔兔" }, { z: "ㄛ", word: "奶奶" }, { z: "ㄜ", word: "老師" },
+      { z: "ㄝ", word: "哥哥" }, { z: "ㄞ", word: "可可" }, { z: "ㄟ", word: "花" }, { z: "ㄧ", word: "雞" },
+      { z: "ㄨ", word: "氣" }, { z: "ㄩ", word: "西" }, { z: "ㄒ", word: "豬" }, { z: "ㄓ", word: "車" },
+      { z: "ㄔ", word: "書" }, { z: "ㄕ", word: "日" }, { z: "ㄖ", word: "字" }, { z: "ㄗ", word: "詞" },
+      { z: "ㄘ", word: "絲" }, { z: "ㄚ", word: "阿" }, { z: "ㄛ", word: "喝" }, { z: "ㄜ", word: "鵝" },
+      { z: "ㄝ", word: "耶" }, { z: "ㄞ", word: "愛" }, { z: "ㄟ", word: "ㄟ" }, { z: "ㄠ", word: "凹" },
+      { z: "ㄡ", word: "歐" }, { z: "ㄢ", word: "安" }, { z: "ㄣ", word: "恩" }, { z: "ㄤ", word: "昂" },
+      { z: "ㄥ", word: "ㄥ" }, { z: "ㄦ", word: "兒" }, { z: "ㄧ", word: "一" }, { z: "ㄨ", word: "五" },
+      { z: "ㄩ", word: "魚" }
+    ];
+
+    let progress = JSON.parse(localStorage.getItem('zhuyin-progress') || '{}');
+    function saveProgress() { localStorage.setItem('zhuyin-progress', JSON.stringify(progress)); }
+    function getStars(z) { return progress[z] || 0; }
+    function addStar(z) {
+      progress[z] = Math.min(3, (progress[z] || 0) + 1);
+      saveProgress();
+      updateProgressDisplay();
+    }
+
+    function updateProgressDisplay() {
+      const learned = Object.keys(progress).filter(k => progress[k] > 0).length;
+      document.getElementById('progress-text').textContent = `${learned} / 37`;
+      const detail = document.getElementById('progress-detail');
+      if (detail) detail.textContent = `已認識 ${learned} 個注音符號`;
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1100);
+    }
+
+    function speak(text) {
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-TW';
+        u.rate = 0.9;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      }
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      allSymbols.forEach(item => {
+        const stars = getStars(item.z);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="zhuyin">${item.z}</div>
+          <div class="word">${item.word}</div>
+          <div class="stars">${[1,2,3].map(i => `<span class="${i <= stars ? 'filled' : 'empty'}">★</span>`).join('')}</div>
+        `;
+        card.onclick = () => {
+          speak(item.z);
+          addStar(item.z);
+          showToast(`${item.z} · ${item.word}`);
+          renderGrid();
+        };
+        grid.appendChild(card);
+      });
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.onclick = () => {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-' + item.dataset.view).classList.add('active');
+        if (item.dataset.view === 'progress') updateProgressDisplay();
+      };
+    });
+
+    let quizIndex = 0, quizScore = 0;
+    document.getElementById('start-quiz').onclick = startQuiz;
+    function startQuiz() {
+      quizIndex = 0; quizScore = 0;
+      document.getElementById('quiz-options').style.display = 'grid';
+      document.getElementById('start-quiz').style.display = 'none';
+      nextQuestion();
+    }
+    function nextQuestion() {
+      if (quizIndex >= 5) {
+        document.getElementById('quiz-prompt').textContent = `完成！得分 ${quizScore}/5`;
+        document.getElementById('quiz-options').style.display = 'none';
+        document.getElementById('start-quiz').style.display = 'inline-block';
+        document.getElementById('start-quiz').textContent = '再玩一次';
+        return;
+      }
+      const correct = allSymbols[Math.floor(Math.random() * allSymbols.length)];
+      const options = [correct];
+      while (options.length < 4) {
+        const r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
+        if (!options.includes(r)) options.push(r);
+      }
+      options.sort(() => Math.random() - 0.5);
+      document.getElementById('quiz-prompt').textContent = '聽聲音，選正確的注音';
+      speak(correct.z);
+      const container = document.getElementById('quiz-options');
+      container.innerHTML = '';
+      options.forEach(opt => {
+        const btn = document.createElement('div');
+        btn.className = 'option';
+        btn.textContent = opt.z;
+        btn.onclick = () => {
+          if (opt.z === correct.z) {
+            btn.classList.add('correct');
+            quizScore++;
+            addStar(correct.z);
+            showToast('答對了！');
+          } else {
+            btn.classList.add('wrong');
+            showToast('再試試');
+          }
+          setTimeout(() => { quizIndex++; nextQuestion(); }, 800);
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function resetProgress() {
+      if (confirm('確定要重置所有進度嗎？')) {
+        progress = {};
+        saveProgress();
+        updateProgressDisplay();
+        renderGrid();
+        showToast('已重置');
+      }
+    }
+
+    renderGrid();
+    updateProgressDisplay();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
+</body>
+</html>

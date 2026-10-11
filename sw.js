@@ -1,28 +1,26 @@
-const CACHE_NAME = 'xiao-xiao-bpmf-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
-
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
-  );
-  self.skipWaiting();
+const CACHE = 'little-bpmf-v2.0.0';
+const FILES = ['./', './index.html', './style.css', './app.js', './data.js', './manifest.json', './icon-192.png', './icon-512.png'];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
 });
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key !== CACHE && (key.startsWith('little-bpmf-') || key.startsWith('xiao-xiao-bpmf-'))).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
-
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
-  );
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+  // Keep the complete installed shell at one version until the new worker activates.
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(event.request);
+    if (cached) return cached;
+    try { return await fetch(event.request); }
+    catch (error) {
+      if (event.request.mode === 'navigate') return await cache.match('./index.html');
+      throw error;
+    }
+  })());
 });

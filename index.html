@@ -59,7 +59,6 @@
       <div class="logo">小小ㄥㄑㄇ</div>
       <div class="progress-pill"><span class="star">★</span><span id="progress-text">0 / 37</span></div>
     </header>
-
     <div id="view-learn" class="view active">
       <div class="goal">
         <div class="goal-left">今日目標：再學 <span>5</span> 個注音</div>
@@ -67,17 +66,14 @@
       </div>
       <div class="grid" id="grid"></div>
     </div>
-
     <div id="view-quiz" class="view">
       <div class="quiz">
         <h2 style="margin-bottom:12px;">聽音辨字</h2>
         <div id="quiz-prompt" style="font-size:20px; margin:16px 0;">準備好了嗎？</div>
         <button id="start-quiz" class="big-btn">開始練習</button>
         <div id="quiz-options" class="options" style="display:none;"></div>
-        <div id="quiz-score" style="margin-top:16px; font-size:18px;"></div>
       </div>
     </div>
-
     <div id="view-progress" class="view">
       <div class="progress-view">
         <h2>我的進度</h2>
@@ -86,15 +82,12 @@
       </div>
     </div>
   </div>
-
   <nav class="nav">
     <div class="nav-item active" data-view="learn"><div class="icon">📖</div><div>學習</div></div>
     <div class="nav-item" data-view="quiz"><div class="icon">🎧</div><div>聽音</div></div>
     <div class="nav-item" data-view="progress"><div class="icon">⭐</div><div>進度</div></div>
   </nav>
-
   <div class="toast" id="toast"></div>
-
   <script>
     const allSymbols = [
       { z: "ㄥ", word: "爸爸" }, { z: "ㄑ", word: "婆婆" }, { z: "ㄇ", word: "媽媽" }, { z: "ㄈ", word: "風" },
@@ -108,40 +101,29 @@
       { z: "ㄥ", word: "ㄥ" }, { z: "ㄦ", word: "兒" }, { z: "ㄧ", word: "一" }, { z: "ㄨ", word: "五" },
       { z: "ㄩ", word: "魚" }
     ];
-
     let progress = JSON.parse(localStorage.getItem('zhuyin-progress') || '{}');
     function saveProgress() { localStorage.setItem('zhuyin-progress', JSON.stringify(progress)); }
     function getStars(z) { return progress[z] || 0; }
-    function addStar(z) {
-      progress[z] = Math.min(3, (progress[z] || 0) + 1);
-      saveProgress();
-      updateProgressDisplay();
-    }
-
+    function addStar(z) { progress[z] = Math.min(3, (progress[z] || 0) + 1); saveProgress(); updateProgressDisplay(); }
     function updateProgressDisplay() {
       const learned = Object.keys(progress).filter(k => progress[k] > 0).length;
-      document.getElementById('progress-text').textContent = `${learned} / 37`;
+      document.getElementById('progress-text').textContent = learned + ' / 37';
       const detail = document.getElementById('progress-detail');
-      if (detail) detail.textContent = `已認識 ${learned} 個注音符號`;
+      if (detail) detail.textContent = '已認識 ' + learned + ' 個注音符號';
     }
-
     function showToast(text) {
       const toast = document.getElementById('toast');
       toast.textContent = text;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 1100);
     }
-
     function speak(text) {
       if ('speechSynthesis' in window) {
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-TW';
-        u.rate = 0.9;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(u);
+        u.lang = 'zh-TW'; u.rate = 0.9;
+        speechSynthesis.cancel(); speechSynthesis.speak(u);
       }
     }
-
     function renderGrid() {
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
@@ -149,21 +131,11 @@
         const stars = getStars(item.z);
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = `
-          <div class="zhuyin">${item.z}</div>
-          <div class="word">${item.word}</div>
-          <div class="stars">${[1,2,3].map(i => `<span class="${i <= stars ? 'filled' : 'empty'}">★</span>`).join('')}</div>
-        `;
-        card.onclick = () => {
-          speak(item.z);
-          addStar(item.z);
-          showToast(`${item.z} · ${item.word}`);
-          renderGrid();
-        };
+        card.innerHTML = '<div class="zhuyin">' + item.z + '</div><div class="word">' + item.word + '</div><div class="stars">' + [1,2,3].map(i => '<span class="' + (i <= stars ? 'filled' : 'empty') + '">★</span>').join('') + '</div>';
+        card.onclick = () => { speak(item.z); addStar(item.z); showToast(item.z + ' · ' + item.word); renderGrid(); };
         grid.appendChild(card);
       });
     }
-
     document.querySelectorAll('.nav-item').forEach(item => {
       item.onclick = () => {
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -173,7 +145,6 @@
         if (item.dataset.view === 'progress') updateProgressDisplay();
       };
     });
-
     let quizIndex = 0, quizScore = 0;
     document.getElementById('start-quiz').onclick = startQuiz;
     function startQuiz() {
@@ -184,7 +155,7 @@
     }
     function nextQuestion() {
       if (quizIndex >= 5) {
-        document.getElementById('quiz-prompt').textContent = `完成！得分 ${quizScore}/5`;
+        document.getElementById('quiz-prompt').textContent = '完成！得分 ' + quizScore + '/5';
         document.getElementById('quiz-options').style.display = 'none';
         document.getElementById('start-quiz').style.display = 'inline-block';
         document.getElementById('start-quiz').textContent = '再玩一次';
@@ -194,7 +165,7 @@
       const options = [correct];
       while (options.length < 4) {
         const r = allSymbols[Math.floor(Math.random() * allSymbols.length)];
-        if (!options.includes(r)) options.push(r);
+        if (!options.find(o => o.z === r.z)) options.push(r);
       }
       options.sort(() => Math.random() - 0.5);
       document.getElementById('quiz-prompt').textContent = '聽聲音，選正確的注音';
@@ -206,37 +177,20 @@
         btn.className = 'option';
         btn.textContent = opt.z;
         btn.onclick = () => {
-          if (opt.z === correct.z) {
-            btn.classList.add('correct');
-            quizScore++;
-            addStar(correct.z);
-            showToast('答對了！');
-          } else {
-            btn.classList.add('wrong');
-            showToast('再試試');
-          }
+          if (opt.z === correct.z) { btn.classList.add('correct'); quizScore++; addStar(correct.z); showToast('答對了！'); }
+          else { btn.classList.add('wrong'); showToast('再試試'); }
           setTimeout(() => { quizIndex++; nextQuestion(); }, 800);
         };
         container.appendChild(btn);
       });
     }
-
     function resetProgress() {
       if (confirm('確定要重置所有進度嗎？')) {
-        progress = {};
-        saveProgress();
-        updateProgressDisplay();
-        renderGrid();
-        showToast('已重置');
+        progress = {}; saveProgress(); updateProgressDisplay(); renderGrid(); showToast('已重置');
       }
     }
-
-    renderGrid();
-    updateProgressDisplay();
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
-    }
+    renderGrid(); updateProgressDisplay();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
   </script>
 </body>
 </html>

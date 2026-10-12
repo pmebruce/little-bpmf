@@ -1,0 +1,125 @@
+'use strict';
+function modelFor(mode){return state.learning[mode];}
+function pool(){return symbolPoolFor(modelFor('listen').level);}
+function questionKey(){return game.mode==='listen'?game.q.z:game.mode+':'+game.q.z;}
+function start(mode){
+  stopAudio();game={mode,index:0,first:0,hadError:false,locked:false,finished:false,questions:[],used:[],filled:[],awarded:false};
+  page='game';renderQuestion();window.scrollTo(0,0);
+}
+function renderQuestion(){
+  const g=game;if(!g)return;if(g.index===5){finish();return;}
+  g.hadError=false;g.locked=false;g.errors=0;g.reduced=false;g.partIndex=0;g.partReady=false;g.filled=[];g.used=[];
+  const model=modelFor(g.mode);g.level=model.level;
+  g.q=chooseCurriculumQuestion(g.mode,model,state.topic,g.questions.map(q=>q.id),shuffle);g.questions.push(g.q);save();
+  const q=g.q;
+  screen.innerHTML=`<section class="game"><div class="game-head"><button class="secondary" id="exit-game">‹ 地圖</button><div class="track"><div style="width:${g.index*20}%"></div></div><small>${g.index+1} / 5</small></div><div class="panel"><div class="eyebrow">${g.mode==='listen'?'聲音寶藏島':g.mode==='spell'?'拼音彩虹橋':'聲調溜滑梯'}</div><div class="stage-pill">${stageName(g.mode,g.level)}</div><h2>${g.mode==='listen'?'寶藏藏在哪個注音？':g.mode==='spell'?`一起拼出「${q.word}」`:'找出聲音走的路線'}</h2><div class="scene"><span class="big">🦊</span><div class="stepping">${Array.from({length:5},(_,i)=>`<span class="${i<g.index?'done':''}">${i<g.index?'★':'·'}</span>`).join('')}</div><span class="big">${g.mode==='listen'?'🎁':g.mode==='spell'?q.emoji:'🎢'}</span></div>${g.mode==='tone'?`<p>${q.word.length>1?`聽「${q.word}」，找出「${q.target}」的聲調。`:'聽聽看，是哪一種聲調？'}</p>`:''}<button class="listen" id="replay">🔊 ${g.mode==='listen'?'聽寶藏密語':g.mode==='spell'?'聽整個字詞':'播放聲音'}</button>${g.mode==='tone'?'<small>一聲 — 是練習提示，平常注音不標。</small>':''}<div id="spell-lesson" hidden></div><div id="answer-area"></div><div id="feedback" class="feedback" role="status" aria-live="polite">${g.mode==='spell'?'先認識字音，再把小橋搭好。':'先按喇叭，再選答案。'}</div><div class="row" style="justify-content:center"><button class="secondary" id="hint">${g.mode==='spell'?'📖 看拼音示範':'💡 給我提示'}</button><button class="primary" id="next" hidden>繼續探險 →</button></div>${g.mode==='listen'?'':'<small class="voice-note">字詞使用裝置的台灣中文語音；沒有語音時，可由家長陪讀。</small>'}</div></section>`;
+  $('#exit-game').onclick=()=>go('home');$('#replay').onclick=()=>g.mode==='listen'?soundSymbol(q.z):speakWord(q.word);
+  $('#hint').onclick=hint;$('#next').onclick=()=>{if(!g.locked)return;stopAudio();g.index++;renderQuestion();};
+  if(g.mode==='spell')renderSpell();else renderChoices();
+}
+function renderChoices(){
+  const g=game,q=g.q;let opts;
+  if(g.mode==='listen'){
+    const count=g.level===1?2:g.level<=3?3:4;
+    const preferred=g.level>=4?(CONFUSABLE.find(group=>group.includes(q.z))||[]):[];
+    opts=answerChoices(q.z,pool().map(s=>s.z),count,shuffle,preferred).map(z=>({label:z,key:z}));
+  }else{
+    const allowed=g.level===1?['一聲','四聲']:g.level===2?['一聲','二聲','四聲']:g.level===3?['一聲','二聲','三聲','四聲']:TONE_OPTIONS.map(t=>t.answer);
+    opts=TONE_OPTIONS.filter(t=>allowed.includes(t.answer)).map(t=>({label:t.mark,key:t.answer,sub:t.answer+' · '+t.shape}));
+  }
+  $('#answer-area').innerHTML=`<div class="choices">${opts.map(o=>`<button class="choice" data-answer="${o.key}" aria-label="${o.key}">${o.label}${o.sub?`<small>${o.sub}</small>`:''}</button>`).join('')}</div>`;
+  document.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>{
+    if(g.locked||b.disabled)return;
+    const correct=g.mode==='listen'?q.z:q.answer;
+    if(b.dataset.answer===correct){b.classList.add('correct');win();}
+    else{b.classList.add('wrong');b.disabled=true;wrong();}
+  });
+}
+function currentPart(){return game.q.parts[game.partIndex];}
+function syllableTokens(){return [...currentPart().z];}
+function renderSpell(skipLesson=false){
+  const g=game,part=currentPart(),tokens=syllableTokens();$('#hint').hidden=false;$('#answer-area').hidden=false;$('#spell-lesson').hidden=true;g.filled=[];g.used=[];g.partReady=false;
+  g.kind=g.level<=2||g.level===4?'missing':'assemble';
+  const heading=`<div class="word-parts">${g.q.parts.map((p,i)=>`<span class="${i===g.partIndex?'current':i<g.partIndex?'done':''}">${i<g.partIndex?'✓ ':''}${p.word}</span>`).join('')}</div><p class="sub">${g.q.parts.length>1?`第 ${g.partIndex+1} 個字：`:'這個字：'}${part.word} · ${g.kind==='missing'?'找出空格缺少的注音':'先放注音，再放聲調'}</p>`;
+  if(g.kind==='missing'){
+    let indices=tokens.map((_,i)=>i);if(g.level===1)indices=indices.filter(i=>!['ˊ','ˇ','ˋ'].includes(tokens[i]));
+    g.missingIndex=pick(indices);g.missingAnswer=tokens[g.missingIndex];
+    const isTone=['ˊ','ˇ','ˋ'].includes(g.missingAnswer);
+    const candidates=isTone?['ˊ','ˇ','ˋ']:SYMBOLS.map(s=>s.z);
+    const preferred=CONFUSABLE.find(x=>x.includes(g.missingAnswer))||[];
+    g.missingChoices=answerChoices(g.missingAnswer,candidates,g.level===1||g.reduced?2:3,shuffle,preferred);
+    $('#answer-area').innerHTML=heading+`<div class="slots">${tokens.map((z,i)=>`<div class="slot ${i===g.missingIndex?'missing':'given'}">${i===g.missingIndex?'？':z}</div>`).join('')}</div><div class="choices">${g.missingChoices.map(z=>`<button class="choice" data-missing="${z}" aria-label="缺少的${isTone?'聲調':'注音'} ${z}">${z}</button>`).join('')}</div><button class="primary" id="next-part" hidden>下一個字 →</button>`;
+    document.querySelectorAll('[data-missing]').forEach(b=>b.onclick=()=>{
+      if(g.locked||g.partReady||b.disabled)return;
+      if(b.dataset.missing===g.missingAnswer){b.classList.add('correct');$('.slot.missing').textContent=g.missingAnswer;partSolved();}
+      else{b.classList.add('wrong');b.disabled=true;wrong();}
+    });
+  }else{
+    const extraCount=g.reduced?0:g.level>=5?2:1;
+    const extras=shuffle(SYMBOLS.map(s=>s.z).filter(z=>!tokens.includes(z))).slice(0,extraCount);
+    g.tiles=shuffle([...tokens,...extras]);
+    $('#answer-area').innerHTML=heading+`<div class="slots" id="slots"></div><div class="tilebank">${g.tiles.map((z,i)=>`<button data-tile="${i}" aria-label="積木 ${z}">${z}</button>`).join('')}</div><button class="secondary" id="undo">↶ 拿回一塊</button> <button class="primary" id="check">搭好橋了！</button><button class="primary" id="next-part" hidden>下一個字 →</button>`;
+    refreshSlots();
+    document.querySelectorAll('[data-tile]').forEach(b=>b.onclick=()=>{if(g.locked||g.partReady||b.disabled||g.filled.length>=tokens.length)return;const i=Number(b.dataset.tile);g.filled.push(g.tiles[i]);g.used.push(i);b.disabled=true;refreshSlots();});
+    $('#undo').onclick=()=>{if(g.locked||g.partReady)return;const i=g.used.pop();g.filled.pop();if(i!==undefined)document.querySelector(`[data-tile="${i}"]`).disabled=false;refreshSlots();};
+    $('#check').onclick=()=>{if(g.locked||g.partReady)return;if(g.filled.length<tokens.length){feedback('還有空格，繼續放積木。');return;}if(g.filled.join('')===part.z)partSolved();else wrong();};
+  }
+  $('#next-part').onclick=()=>{if(!g.partReady||g.locked)return;g.partIndex++;stopAudio();renderSpell();feedback('新的一座小橋，換這個字了。');};
+  if(!skipLesson&&(g.level===1||!state.lessons[g.q.id+':'+g.partIndex]||g.needsLesson)){showLesson(false);g.needsLesson=false;}
+}
+function refreshSlots(){const tokens=syllableTokens();$('#slots').innerHTML=tokens.map((_,i)=>`<div class="slot">${game.filled[i]||'·'}</div>`).join('');}
+function partSolved(){
+  const g=game;if(g.locked||g.partReady)return;
+  if(g.partIndex===g.q.parts.length-1){win();return;}
+  g.partReady=true;document.querySelectorAll('[data-tile],[data-missing],#check,#undo').forEach(b=>b.disabled=true);
+  chime();feedback(`「${currentPart().word}」拼好了！再拼下一個字。`,true);$('#next-part').hidden=false;$('#hint').hidden=true;
+}
+function showLesson(assisted=true){
+  const g=game;if(!g||g.locked||g.mode!=='spell')return;if(assisted)g.hadError=true;
+  const part=currentPart(),glyphs=[...part.z].filter(z=>!['ˊ','ˇ','ˋ'].includes(z)),mark=[...part.z].find(z=>['ˊ','ˇ','ˋ'].includes(z));
+  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">點小卡聽符號讀音，合起來就是這個字的字音。</p><div class="formula">${glyphs.map((z,i)=>`${i?'<span class="join">＋</span>':''}<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`).join('')}${mark?`<span class="join">＋</span><span class="tone-card">${mark}<small>${TONE_OPTIONS.find(t=>t.mark===mark).answer}</small></span>`:''}</div><div class="blend-result"><span>→</span><strong>${part.z}</strong><span>「${part.word}」</span></div><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark?'聲調放在注音最後面。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
+  $('#spell-lesson').hidden=false;$('#answer-area').hidden=true;$('#hint').hidden=true;feedback('跟著聽一聽，準備好了就換你試試。');
+  document.querySelectorAll('[data-demo-symbol]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-demo-symbol]').forEach(x=>x.classList.remove('heard'));b.classList.add('heard');soundSymbol(b.dataset.demoSymbol);});
+  $('#blend-sound').onclick=()=>speakWord(part.word);
+  $('#lesson-ready').onclick=()=>{if(game!==g||g.locked)return;stopAudio();state.lessons[g.q.id+':'+g.partIndex]=true;save();if(g.reduced)renderSpell(true);$('#spell-lesson').hidden=true;$('#answer-area').hidden=false;$('#hint').hidden=false;feedback(g.kind==='missing'?'哪個注音不見了？點一個放進空格。':'有多出來的積木，選需要的注音來搭橋。');};
+}
+function feedback(t,success=false){$('#feedback').textContent=t;$('#feedback').classList.toggle('success',success);}
+function shrinkChoices(){
+  const g=game,correct=g.mode==='listen'?g.q.z:g.mode==='tone'?g.q.answer:g.missingAnswer;
+  if(g.mode==='spell'&&g.kind==='assemble'){
+    // Keep the learner's current attempt so they can undo it; extras are removed
+    // only after clearing the attempt in an explicit guided retry.
+    return;
+  }
+  const buttons=[...document.querySelectorAll(g.mode==='spell'?'[data-missing]':'[data-answer]')].filter(b=>!b.disabled&&!b.hidden);
+  while(buttons.length>2){const i=buttons.findIndex(b=>(g.mode==='spell'?b.dataset.missing:b.dataset.answer)!==correct);if(i<0)break;buttons[i].hidden=true;buttons.splice(i,1);}
+}
+function wrong(){
+  const g=game;if(g.locked||g.partReady)return;g.hadError=true;g.errors++;state.mistakes[questionKey()]=(state.mistakes[questionKey()]||0)+1;save();
+  shrinkChoices();g.reduced=true;
+  if(g.mode==='spell'&&g.errors>=2){showLesson(true);return;}
+  feedback(g.mode==='listen'?'再聽一次，我幫你減少選項。':g.mode==='spell'?'還差一點！可以拿回積木調整，或看拼音示範。':'再聽一次，看看聲音往哪裡走。');
+  if(g.errors>=2&&g.mode!=='spell')hint();
+}
+function hint(){
+  const g=game;if(!g||g.locked||g.partReady)return;g.hadError=true;
+  if(g.mode==='listen'){feedback(`找找「${g.q.z}」。${g.q.word}：${g.q.note}。`);soundSymbol(g.q.z);}
+  else if(g.mode==='spell')showLesson(true);
+  else feedback(`${g.q.hint} 這是${g.q.answer} ${g.q.mark}。`);
+}
+function win(){
+  const g=game;if(g.locked)return;g.locked=true;if(!g.hadError)g.first++;
+  daily();const key=questionKey();state.correct[key]=(state.correct[key]||0)+1;if(!state.today.includes(key))state.today.push(key);
+  if(!g.hadError)state.mistakes[key]=Math.max(0,(state.mistakes[key]||0)-1);
+  const change=recordLearning(modelFor(g.mode),g.q.id,g.hadError);state.stars++;save();chime();
+  let message=g.hadError?'做到了！練習讓你更進步。 +1 ★':'答對了！往前走一步。 +1 ★';
+  if(change==='up')message+=' 下一題試試新挑戰！';if(change==='down')message+=' 下一題我們放慢一點。';
+  feedback(message,true);document.querySelectorAll('[data-answer],[data-missing],[data-tile],#check,#undo').forEach(b=>b.disabled=true);
+  $('#hint').hidden=true;$('#next').hidden=false;$('#next').focus({preventScroll:true});$('.scene .big').style.transform='translateX(18px)';
+}
+function finish(){
+  const g=game;if(g.awarded)return;g.finished=true;g.awarded=true;state.rounds++;
+  const reward=stickers.findIndex((_,i)=>!state.stickers.includes(i));if(reward>=0)state.stickers.push(reward);save();chime();confetti();
+  screen.innerHTML=`<section class="game result panel"><div class="eyebrow">MISSION COMPLETE</div><div class="result-icon">🎉</div><h1>探險成功！</h1><p>完成 5 個挑戰，獲得 5 顆星星。<br>${g.first===5?'這次都自己答對了，太棒了！':`有 ${g.first} 題自己答對，其餘也努力完成了！`}</p><div class="reward">${reward>=0?stickers[reward][0]:'🏆'}</div><h3>${reward>=0?'新朋友：'+stickers[reward][1]:'動物朋友都到齊了！'}</h3><p>下回合：${stageName(g.mode,modelFor(g.mode).level)}<br>${state.today.length>=5?'今天的小任務已完成，記得讓眼睛休息。':'再玩一回合，或去看看你的收藏。'}</p><div class="row" style="justify-content:center"><button class="secondary" data-go="collection">看看收藏</button><button class="primary" id="again">再探險一次</button></div><button class="secondary" data-go="home" style="margin-top:16px">回到地圖</button></section>`;$('#again').onclick=()=>start(g.mode);
+}
+go('home');

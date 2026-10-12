@@ -1,5 +1,5 @@
-const CACHE = 'little-bpmf-v2.1.0';
-const FILES = ['./', './index.html', './style.css', './app.js', './data.js', './curriculum.js', './learning.js', './gameplay.js', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'little-bpmf-v2.2.0';
+const FILES = ['./', './index.html', './style.css', './app.js', './data.js', './curriculum.js', './learning.js', './gameplay.js', './missions.js', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
 });

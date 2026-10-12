@@ -57,3 +57,9 @@ const TONE_BANK = WORD_BANK.map(w => {
   const mark=[...syllable.z].find(z=>'ˊˇˋ'.includes(z))||'—';
   return {...w,id:'tone:'+w.word,...TONE_OPTIONS.find(t=>t.mark===mark),target:syllable.word};
 }).concat([{id:'tone:媽媽',category:'daily',word:'媽媽',z:'ㄇㄚ ·ㄇㄚ',emoji:'👩',target:'第二個媽',parts:[{word:'媽',z:'ㄇㄚ'},{word:'媽',z:'˙ㄇㄚ'}],...TONE_OPTIONS[4]}]);
+// Canonical picture labels avoid two answers that look identical (e.g. 貓/小貓,
+// 雲/白雲). Words whose existing icon is only an abstract dot are not quiz images.
+const PICTURE_WORDS = new Set('貓 狗 兔 魚 鳥 馬 牛 羊 虎 熊 青蛙 烏龜 河馬 海豚 桃 梨 橘 蘋果 香蕉 草莓 西瓜 葡萄 鳳梨 芒果 飯 麵 蛋 湯 糖 茶 餅 牛奶 麵包 牛肉 蛋糕 車 船 路 橋 票 輪 燈 公車 火車 飛機 輪船 單車 書 筆 門 手 腳 衣 鞋 帽 杯 椅 書包 手套 雨衣 山 花 草 樹 雨 雲 風 水 石 太陽 月亮 彩虹 大海'.split(' '));
+const PICTURE_BANK = WORD_BANK.filter(w=>PICTURE_WORDS.has(w.word)).map(w=>({...w,id:'picture:'+w.word}));
+
+const PICTURE_CONFLICTS=[['車','汽車'],['車','公車'],['車','火車'],['車','單車'],['船','輪船'],['衣','雨衣']];

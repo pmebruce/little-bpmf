@@ -44,12 +44,12 @@ function syllableTokens(){return [...currentPart().z];}
 function renderSpell(skipLesson=false){
   const g=game,part=currentPart(),tokens=syllableTokens();$('#hint').hidden=false;$('#answer-area').hidden=false;$('#spell-lesson').hidden=true;g.filled=[];g.used=[];g.partReady=false;
   g.kind=g.level<=2||g.level===4?'missing':'assemble';
-  const heading=`<div class="word-parts">${g.q.parts.map((p,i)=>`<span class="${i===g.partIndex?'current':i<g.partIndex?'done':''}">${i<g.partIndex?'✓ ':''}${p.word}</span>`).join('')}</div><p class="sub">${g.q.parts.length>1?`第 ${g.partIndex+1} 個字：`:'這個字：'}${part.word} · ${g.kind==='missing'?'找出空格缺少的注音':'先放注音，再放聲調'}</p>`;
+  const heading=`<div class="word-parts">${g.q.parts.map((p,i)=>`<span class="${i===g.partIndex?'current':i<g.partIndex?'done':''}">${i<g.partIndex?'✓ ':''}${p.word}</span>`).join('')}</div><p class="sub">${g.q.parts.length>1?`第 ${g.partIndex+1} 個字：`:'這個字：'}${part.word} · ${g.kind==='missing'?'找出空格缺少的注音':tokens.includes('˙')?'輕聲放最前面，再排注音':'先放注音，再放聲調'}</p>`;
   if(g.kind==='missing'){
-    let indices=tokens.map((_,i)=>i);if(g.level===1)indices=indices.filter(i=>!['ˊ','ˇ','ˋ'].includes(tokens[i]));
+    let indices=tokens.map((_,i)=>i);if(g.level===1)indices=indices.filter(i=>!TONE_MARKS.includes(tokens[i]));
     g.missingIndex=pick(indices);g.missingAnswer=tokens[g.missingIndex];
-    const isTone=['ˊ','ˇ','ˋ'].includes(g.missingAnswer);
-    const candidates=isTone?['ˊ','ˇ','ˋ']:SYMBOLS.map(s=>s.z);
+    const isTone=TONE_MARKS.includes(g.missingAnswer);
+    const candidates=isTone?TONE_MARKS:SYMBOLS.map(s=>s.z);
     const preferred=CONFUSABLE.find(x=>x.includes(g.missingAnswer))||[];
     g.missingChoices=answerChoices(g.missingAnswer,candidates,g.level===1||g.reduced?2:3,shuffle,preferred);
     $('#answer-area').innerHTML=heading+`<div class="slots">${tokens.map((z,i)=>`<div class="slot ${i===g.missingIndex?'missing':'given'}">${i===g.missingIndex?'？':z}</div>`).join('')}</div><div class="choices">${g.missingChoices.map(z=>`<button class="choice" data-missing="${z}" aria-label="缺少的${isTone?'聲調':'注音'} ${z}">${z}</button>`).join('')}</div><button class="primary" id="next-part" hidden>下一個字 →</button>`;
@@ -80,8 +80,8 @@ function partSolved(){
 }
 function showLesson(assisted=true){
   const g=game;if(!g||g.locked||g.mode!=='spell')return;if(assisted)g.hadError=true;
-  const part=currentPart(),glyphs=[...part.z].filter(z=>!['ˊ','ˇ','ˋ'].includes(z)),mark=[...part.z].find(z=>['ˊ','ˇ','ˋ'].includes(z));
-  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">點小卡聽符號讀音，合起來就是這個字的字音。</p><div class="formula">${glyphs.map((z,i)=>`${i?'<span class="join">＋</span>':''}<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`).join('')}${mark?`<span class="join">＋</span><span class="tone-card">${mark}<small>${TONE_OPTIONS.find(t=>t.mark===mark).answer}</small></span>`:''}</div><div class="blend-result"><span>→</span><strong>${part.z}</strong><span>「${part.word}」</span></div><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark?'聲調放在注音最後面。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
+  const part=currentPart(),mark=[...part.z].find(z=>TONE_MARKS.includes(z));
+  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">點小卡聽符號讀音，合起來就是這個字的字音。</p><div class="formula">${[...part.z].map((z,i)=>`${i?'<span class="join">＋</span>':''}${TONE_MARKS.includes(z)?`<span class="tone-card">${z}<small>${TONE_OPTIONS.find(t=>t.mark===z).answer}</small></span>`:`<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`}`).join('')}</div><div class="blend-result"><span>→</span><strong>${part.z}</strong><span>「${part.word}」</span></div><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark==='˙'?'輕聲記號 ˙ 放在注音最前面。':mark?'聲調放在注音最後面。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
   $('#spell-lesson').hidden=false;$('#answer-area').hidden=true;$('#hint').hidden=true;feedback('跟著聽一聽，準備好了就換你試試。');
   document.querySelectorAll('[data-demo-symbol]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-demo-symbol]').forEach(x=>x.classList.remove('heard'));b.classList.add('heard');soundSymbol(b.dataset.demoSymbol);});
   $('#blend-sound').onclick=()=>speakWord(part.word);

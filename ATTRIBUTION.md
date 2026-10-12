@@ -14,3 +14,13 @@
 來源：https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/deploy/index.html
 
 本程式將原始 WAV 轉為 40 kbps 單聲道 MP3，嵌入 data.js，符號對照依官方 HTML 的 a1–a37。SVG 筆畫抽取後用於字形、逐筆顯示與圖示；未改變字形路徑。這是獨立學習工具，非教育部官方服務。
+
+## 字詞注音核對
+
+生活字詞讀音參照教育部《國語辭典簡編本》公開資料（2026-09-29）與教育部辭典。多音字依詞義選讀；自組生活短語依其組成字詞核對。未收錄辭典釋義或完整資料庫。
+
+- https://language.moe.gov.tw/001/Upload/Files/site_content/M0001/respub/dict_concised_download.html
+- https://dict.concised.moe.edu.tw/
+- 胡蘿蔔：https://dict.revised.moe.edu.tw/dictView.jsp?ID=82731
+
+公開資料標示 CC BY-ND 3.0 TW：https://creativecommons.org/licenses/by-nd/3.0/tw/

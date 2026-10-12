@@ -19,7 +19,7 @@ function renderPicturePhonics(){
   const g=game;
   const count=g.reduced?2:g.level>=4?4:3;
   const near=g.pictureChoices.filter(w=>w.z!==g.q.z).map(w=>w.z);
-  const options=answerChoices(g.q.z,PICTURE_BANK.map(w=>w.z),count,shuffle,near);
+  const options=answerChoices(g.q.z,PICTURE_BANK.filter(w=>w.tier<=tierForLevel(g.level)).map(w=>w.z),count,shuffle,near);
   $('#answer-area').innerHTML=`<div class="picture-answer"><span class="picture-art" aria-hidden="true">${g.q.emoji}</span><strong>${g.q.word}</strong><p class="sub">再聽一次，找出這張圖的注音。</p></div><div class="choices phonics-choices">${options.map(z=>`<button class="choice" data-picture-z="${z}" aria-label="注音 ${z}">${z}</button>`).join('')}</div>`;
   $('#hint').hidden=false;feedback('看圖、聽字音，選對應的注音。');
   document.querySelectorAll('[data-picture-z]').forEach(b=>b.onclick=()=>{

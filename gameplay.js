@@ -11,7 +11,9 @@ function renderQuestion(){
   g.mode=g.sessionMode==='mixed'?g.route[g.index]:g.sessionMode;
   g.hadError=false;g.locked=false;g.errors=0;g.reduced=false;g.partIndex=0;g.partReady=false;g.filled=[];g.used=[];g.pictureChoices=null;g.pictureReady=false;g.picturePhase='image';g.detective=null;
   const model=modelFor(g.mode);g.level=model.level;
-  g.q=chooseCurriculumQuestion(g.mode,model,state.topic,g.questions.map(q=>q.id),shuffle);g.questions.push(g.q);save();
+  g.q=chooseCurriculumQuestion(g.mode,model,state.topic,g.questions.map(q=>q.id),shuffle);
+  if(!g.q){if(g.questions.length){finish();}else{go('home');toast('這個主題目前沒有適合的題目，試試其他主題吧！');}return;}
+  g.questions.push(g.q);save();
   const q=g.q;
   const heading=g.mode==='listen'?'寶藏藏在哪個注音？':g.mode==='spell'?`一起拼出「${q.word}」`:g.mode==='picture'?'聽聽看，要找哪張圖？':g.mode==='detective'?`修好「${q.word}」的注音`:'找出聲音走的路線';
   const icon=g.mode==='picture'||g.mode==='listen'?'🎁':g.mode==='spell'||g.mode==='detective'?q.emoji:'🎢';
@@ -124,8 +126,9 @@ function win(){
   $('#hint').hidden=true;$('#next').hidden=false;$('#next').focus({preventScroll:true});$('.scene .big').style.transform='translateX(18px)';
 }
 function finish(){
-  const g=game;if(g.awarded)return;g.finished=true;g.awarded=true;state.rounds++;
+  const g=game;if(g.awarded)return;const completed=g.questions.length;g.finished=true;g.awarded=true;state.rounds++;
   const reward=stickers.findIndex((_,i)=>!state.stickers.includes(i));if(reward>=0)state.stickers.push(reward);save();chime();confetti();
-  screen.innerHTML=`<section class="game result panel"><div class="eyebrow">MISSION COMPLETE</div><div class="result-icon">🎉</div><h1>探險成功！</h1><p>完成 5 個挑戰，獲得 5 顆星星。<br>${g.first===5?'這次都自己答對了，太棒了！':`有 ${g.first} 題自己答對，其餘也努力完成了！`}</p><div class="reward">${reward>=0?stickers[reward][0]:'🏆'}</div><h3>${reward>=0?'新朋友：'+stickers[reward][1]:'動物朋友都到齊了！'}</h3><p>${g.sessionMode==='mixed'?'下回合再玩不同挑戰！':'下回合：'+stageName(g.mode,modelFor(g.mode).level)}<br>${state.today.length>=5?'今天的小任務已完成，記得讓眼睛休息。':'再玩一回合，或去看看你的收藏。'}</p><div class="row" style="justify-content:center"><button class="secondary" data-go="collection">看看收藏</button><button class="primary" id="again">再探險一次</button></div><button class="secondary" data-go="home" style="margin-top:16px">回到地圖</button></section>`;$('#again').onclick=()=>start(g.sessionMode);
+  screen.innerHTML=`<section class="game result panel"><div class="eyebrow">MISSION COMPLETE</div><div class="result-icon">🎉</div><h1>探險成功！</h1><p>完成 ${completed} 個不同挑戰，獲得 ${completed} 顆星星。<br>${g.first===completed?'這次都自己答對了，太棒了！':`有 ${g.first} 題自己答對，其餘也努力完成了！`}</p><div class="reward">${reward>=0?stickers[reward][0]:'🏆'}</div><h3>${reward>=0?'新朋友：'+stickers[reward][1]:'動物朋友都到齊了！'}</h3><p>${g.sessionMode==='mixed'?'下回合再玩不同挑戰！':'下回合：'+stageName(g.mode,modelFor(g.mode).level)}<br>${state.today.length>=5?'今天的小任務已完成，記得讓眼睛休息。':'再玩一回合，或去看看你的收藏。'}</p><div class="row" style="justify-content:center"><button class="secondary" data-go="collection">看看收藏</button><button class="primary" id="again">再探險一次</button></div><button class="secondary" data-go="home" style="margin-top:16px">回到地圖</button></section>`;$('#again').onclick=()=>start(g.sessionMode);
 }
 go('home');
+

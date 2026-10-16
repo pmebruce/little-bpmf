@@ -23,14 +23,35 @@ function curriculumPool(mode,level,category='all'){
   return source.filter(w=>allowed.includes(w.answer));
 }
 function answerChoices(correct,candidates,count,randomize,prefer=[]){const rest=candidates.filter(x=>x!==correct);const priority=randomize(prefer.filter(x=>rest.includes(x)));return randomize([correct,...[...new Set([...priority,...randomize(rest)])].slice(0,count-1)]);}
+// A word remains the same question across picture, spelling, tone and detective
+// modes. Symbol IDs stay separate from word IDs.
+function curriculumQuestionKey(id){return id.replace(/^(word|picture|tone|detective):/,'word:');}
 function chooseCurriculumQuestion(mode,model,category,currentIds,randomize){
-  const source=curriculumPool(mode,model.level,category);if(!source.length)throw Error('Empty curriculum pool');
-  const ids=new Set(source.map(q=>q.id));const due=model.review.filter(q=>q.due<=model.attempts&&ids.has(q.id)&&!currentIds.slice(-2).includes(q.id));
+  const used=new Set(currentIds.map(curriculumQuestionKey));
+  const source=[...new Map(curriculumPool(mode,model.level,category)
+    .filter(q=>!used.has(curriculumQuestionKey(q.id)))
+    .map(q=>[curriculumQuestionKey(q.id),q])).values()];
+  // Never recycle a question to fill a round, even when reviews are overdue.
+  if(!source.length)return null;
+  const ids=new Set(source.map(q=>q.id));
+  const due=model.review.filter(q=>q.due<=model.attempts&&ids.has(q.id));
   const cooling=new Set(model.review.filter(q=>q.due>model.attempts).map(q=>q.id));
-  const ready=source.filter(q=>!cooling.has(q.id));const available=ready.length?ready:source;
-  let selected;if(due.length){selected=source.find(q=>q.id===due.sort((a,b)=>a.due-b.due)[0].id);}
-  else{let eligible=available.filter(q=>!currentIds.includes(q.id)&&!model.recent.includes(q.id));if(!eligible.length)eligible=available.filter(q=>!currentIds.includes(q.id));if(!eligible.length)eligible=available.filter(q=>!currentIds.slice(-2).includes(q.id));if(!eligible.length)eligible=available;const newest=eligible.filter(q=>q.tier===tierForLevel(model.level));selected=randomize(newest.length&&Math.random()<.65?newest:eligible)[0];}
-  model.recent=[...model.recent,selected.id].slice(-12);return selected;
+  const ready=source.filter(q=>!cooling.has(q.id));
+  const available=ready.length?ready:source;
+  let selected;
+  if(due.length)selected=source.find(q=>q.id===[...due].sort((a,b)=>a.due-b.due)[0].id);
+  else{
+    let eligible=available.filter(q=>!model.recent.includes(q.id));
+    if(!eligible.length){
+      // If the topic is small, return the least recently shown eligible item.
+      const oldest=Math.min(...available.map(q=>model.recent.lastIndexOf(q.id)));
+      eligible=available.filter(q=>model.recent.lastIndexOf(q.id)===oldest);
+    }
+    const newest=eligible.filter(q=>q.tier===tierForLevel(model.level));
+    selected=randomize(newest.length&&Math.random()<.65?newest:eligible)[0];
+  }
+  model.recent=[...model.recent.filter(id=>id!==selected.id),selected.id].slice(-12);
+  return selected;
 }
 // Only a completed, unaided question advances difficulty. Several taps on one
 // question must not be recorded as several attempts by the caller.
@@ -61,3 +82,4 @@ function makeDetectivePuzzle(q,level,randomize){
   tokens[tokenIndex]=wrong;return {parts,partIndex,tokenIndex,original,wrong,isTone,phase:'find'};
 }
 function repairedPuzzleText(puzzle){return puzzle.parts.map(p=>p.tokens.filter(Boolean).join('')).join(' ');}
+

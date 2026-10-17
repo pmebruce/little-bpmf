@@ -1,0 +1,226 @@
+{
+  "mode": "train",
+  "title": "字卡小火車｜小小注音島",
+  "subtitle": "聽一聽名字，把正確注音送上火車，載著字卡出發！",
+  "language": "zh-TW",
+  "progressKey": "bpmf-train-v1",
+  "parentKey": "little-bpmf-v2",
+  "items": [
+    {
+      "id": "貓",
+      "label": "ㄇㄠ",
+      "say": "貓",
+      "accessible": "ㄇㄠ",
+      "hint": "🐱 貓 → ㄇㄠ",
+      "explanation": "貓 的注音是 ㄇㄠ。",
+      "starter": true
+    },
+    {
+      "id": "狗",
+      "label": "ㄍㄡˇ",
+      "say": "狗",
+      "accessible": "ㄍㄡˇ",
+      "hint": "🐶 狗 → ㄍㄡˇ",
+      "explanation": "狗 的注音是 ㄍㄡˇ。",
+      "starter": true
+    },
+    {
+      "id": "兔",
+      "label": "ㄊㄨˋ",
+      "say": "兔",
+      "accessible": "ㄊㄨˋ",
+      "hint": "🐰 兔 → ㄊㄨˋ",
+      "explanation": "兔 的注音是 ㄊㄨˋ。",
+      "starter": true
+    },
+    {
+      "id": "魚",
+      "label": "ㄩˊ",
+      "say": "魚",
+      "accessible": "ㄩˊ",
+      "hint": "🐟 魚 → ㄩˊ",
+      "explanation": "魚 的注音是 ㄩˊ。",
+      "starter": true
+    },
+    {
+      "id": "鳥",
+      "label": "ㄋㄧㄠˇ",
+      "say": "鳥",
+      "accessible": "ㄋㄧㄠˇ",
+      "hint": "🐦 鳥 → ㄋㄧㄠˇ",
+      "explanation": "鳥 的注音是 ㄋㄧㄠˇ。",
+      "starter": true
+    },
+    {
+      "id": "馬",
+      "label": "ㄇㄚˇ",
+      "say": "馬",
+      "accessible": "ㄇㄚˇ",
+      "hint": "🐴 馬 → ㄇㄚˇ",
+      "explanation": "馬 的注音是 ㄇㄚˇ。",
+      "starter": true
+    },
+    {
+      "id": "牛",
+      "label": "ㄋㄧㄡˊ",
+      "say": "牛",
+      "accessible": "ㄋㄧㄡˊ",
+      "hint": "🐮 牛 → ㄋㄧㄡˊ",
+      "explanation": "牛 的注音是 ㄋㄧㄡˊ。",
+      "starter": true
+    },
+    {
+      "id": "羊",
+      "label": "ㄧㄤˊ",
+      "say": "羊",
+      "accessible": "ㄧㄤˊ",
+      "hint": "🐑 羊 → ㄧㄤˊ",
+      "explanation": "羊 的注音是 ㄧㄤˊ。",
+      "starter": true
+    },
+    {
+      "id": "虎",
+      "label": "ㄏㄨˇ",
+      "say": "虎",
+      "accessible": "ㄏㄨˇ",
+      "hint": "🐯 虎 → ㄏㄨˇ",
+      "explanation": "虎 的注音是 ㄏㄨˇ。",
+      "starter": true
+    },
+    {
+      "id": "熊",
+      "label": "ㄒㄩㄥˊ",
+      "say": "熊",
+      "accessible": "ㄒㄩㄥˊ",
+      "hint": "🐻 熊 → ㄒㄩㄥˊ",
+      "explanation": "熊 的注音是 ㄒㄩㄥˊ。",
+      "starter": true
+    },
+    {
+      "id": "青蛙",
+      "label": "ㄑㄧㄥ ㄨㄚ",
+      "say": "青蛙",
+      "accessible": "ㄑㄧㄥ ㄨㄚ",
+      "hint": "🐸 青蛙 → ㄑㄧㄥ ㄨㄚ",
+      "explanation": "青蛙 的注音是 ㄑㄧㄥ ㄨㄚ。",
+      "starter": false
+    },
+    {
+      "id": "烏龜",
+      "label": "ㄨ ㄍㄨㄟ",
+      "say": "烏龜",
+      "accessible": "ㄨ ㄍㄨㄟ",
+      "hint": "🐢 烏龜 → ㄨ ㄍㄨㄟ",
+      "explanation": "烏龜 的注音是 ㄨ ㄍㄨㄟ。",
+      "starter": false
+    },
+    {
+      "id": "瓜",
+      "label": "ㄍㄨㄚ",
+      "say": "瓜",
+      "accessible": "ㄍㄨㄚ",
+      "hint": "🍉 瓜 → ㄍㄨㄚ",
+      "explanation": "瓜 的注音是 ㄍㄨㄚ。",
+      "starter": true
+    },
+    {
+      "id": "桃",
+      "label": "ㄊㄠˊ",
+      "say": "桃",
+      "accessible": "ㄊㄠˊ",
+      "hint": "🍑 桃 → ㄊㄠˊ",
+      "explanation": "桃 的注音是 ㄊㄠˊ。",
+      "starter": true
+    },
+    {
+      "id": "梨",
+      "label": "ㄌㄧˊ",
+      "say": "梨",
+      "accessible": "ㄌㄧˊ",
+      "hint": "🍐 梨 → ㄌㄧˊ",
+      "explanation": "梨 的注音是 ㄌㄧˊ。",
+      "starter": true
+    },
+    {
+      "id": "蘋果",
+      "label": "ㄆㄧㄥˊ ㄍㄨㄛˇ",
+      "say": "蘋果",
+      "accessible": "ㄆㄧㄥˊ ㄍㄨㄛˇ",
+      "hint": "🍎 蘋果 → ㄆㄧㄥˊ ㄍㄨㄛˇ",
+      "explanation": "蘋果 的注音是 ㄆㄧㄥˊ ㄍㄨㄛˇ。",
+      "starter": false
+    },
+    {
+      "id": "香蕉",
+      "label": "ㄒㄧㄤ ㄐㄧㄠ",
+      "say": "香蕉",
+      "accessible": "ㄒㄧㄤ ㄐㄧㄠ",
+      "hint": "🍌 香蕉 → ㄒㄧㄤ ㄐㄧㄠ",
+      "explanation": "香蕉 的注音是 ㄒㄧㄤ ㄐㄧㄠ。",
+      "starter": false
+    },
+    {
+      "id": "草莓",
+      "label": "ㄘㄠˇ ㄇㄟˊ",
+      "say": "草莓",
+      "accessible": "ㄘㄠˇ ㄇㄟˊ",
+      "hint": "🍓 草莓 → ㄘㄠˇ ㄇㄟˊ",
+      "explanation": "草莓 的注音是 ㄘㄠˇ ㄇㄟˊ。",
+      "starter": false
+    },
+    {
+      "id": "車",
+      "label": "ㄔㄜ",
+      "say": "車",
+      "accessible": "ㄔㄜ",
+      "hint": "🚗 車 → ㄔㄜ",
+      "explanation": "車 的注音是 ㄔㄜ。",
+      "starter": true
+    },
+    {
+      "id": "公車",
+      "label": "ㄍㄨㄥ ㄔㄜ",
+      "say": "公車",
+      "accessible": "ㄍㄨㄥ ㄔㄜ",
+      "hint": "🚌 公車 → ㄍㄨㄥ ㄔㄜ",
+      "explanation": "公車 的注音是 ㄍㄨㄥ ㄔㄜ。",
+      "starter": false
+    },
+    {
+      "id": "火車",
+      "label": "ㄏㄨㄛˇ ㄔㄜ",
+      "say": "火車",
+      "accessible": "ㄏㄨㄛˇ ㄔㄜ",
+      "hint": "🚂 火車 → ㄏㄨㄛˇ ㄔㄜ",
+      "explanation": "火車 的注音是 ㄏㄨㄛˇ ㄔㄜ。",
+      "starter": false
+    },
+    {
+      "id": "飛機",
+      "label": "ㄈㄟ ㄐㄧ",
+      "say": "飛機",
+      "accessible": "ㄈㄟ ㄐㄧ",
+      "hint": "✈️ 飛機 → ㄈㄟ ㄐㄧ",
+      "explanation": "飛機 的注音是 ㄈㄟ ㄐㄧ。",
+      "starter": false
+    },
+    {
+      "id": "書",
+      "label": "ㄕㄨ",
+      "say": "書",
+      "accessible": "ㄕㄨ",
+      "hint": "📖 書 → ㄕㄨ",
+      "explanation": "書 的注音是 ㄕㄨ。",
+      "starter": true
+    },
+    {
+      "id": "筆",
+      "label": "ㄅㄧˇ",
+      "say": "筆",
+      "accessible": "ㄅㄧˇ",
+      "hint": "✏️ 筆 → ㄅㄧˇ",
+      "explanation": "筆 的注音是 ㄅㄧˇ。",
+      "starter": true
+    }
+  ]
+}

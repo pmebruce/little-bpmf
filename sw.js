@@ -1,5 +1,5 @@
-const CACHE = 'little-bpmf-v2.3.1';
-const FILES = ['./', './index.html', './style.css', './app.js', './data.js', './curriculum.js', './learning.js', './gameplay.js', './missions.js', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'little-bpmf-v2.4-phaser';
+const FILES = ['./adventure.html','./adventure.css','./adventure-entry.css','./game.js','./rounds.js','./game-config.json','./vendor/phaser.min.js','./vendor/Phaser-LICENSE.md','./', './index.html', './style.css', './app.js', './data.js', './curriculum.js', './learning.js', './gameplay.js', './missions.js', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
 });
@@ -19,7 +19,7 @@ self.addEventListener('fetch', event => {
     if (cached) return cached;
     try { return await fetch(event.request); }
     catch (error) {
-      if (event.request.mode === 'navigate') return await cache.match('./index.html');
+      if (event.request.mode === 'navigate') return await cache.match(new URL(event.request.url).pathname.endsWith('/adventure.html')?'./adventure.html':'./index.html');
       throw error;
     }
   })());

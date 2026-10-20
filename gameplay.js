@@ -7,7 +7,7 @@ function start(mode){
   page='game';renderQuestion();window.scrollTo(0,0);
 }
 function renderQuestion(){
-  const g=game;if(!g)return;if(g.index===5){finish();return;}
+  stopAudio();const g=game;if(!g)return;if(g.index===5){finish();return;}
   g.mode=g.sessionMode==='mixed'?g.route[g.index]:g.sessionMode;
   g.hadError=false;g.locked=false;g.errors=0;g.reduced=false;g.partIndex=0;g.partReady=false;g.filled=[];g.used=[];g.pictureChoices=null;g.pictureReady=false;g.picturePhase='image';g.detective=null;
   const model=modelFor(g.mode);g.level=model.level;
@@ -81,13 +81,14 @@ function partSolved(){
   chime();feedback(`「${currentPart().word}」拼好了！再拼下一個字。`,true);$('#next-part').hidden=false;$('#hint').hidden=true;
 }
 function showLesson(assisted=true){
-  const g=game;if(!g||g.locked||g.mode!=='spell')return;if(assisted)g.hadError=true;
+  const g=game;if(!g||g.locked||g.mode!=='spell')return;stopAudio();if(assisted)g.hadError=true;
   const part=currentPart(),mark=[...part.z].find(z=>TONE_MARKS.includes(z));
-  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">點小卡聽符號讀音，合起來就是這個字的字音。</p><div class="formula">${[...part.z].map((z,i)=>`${i?'<span class="join">＋</span>':''}${TONE_MARKS.includes(z)?`<span class="tone-card">${z}<small>${TONE_OPTIONS.find(t=>t.mark===z).answer}</small></span>`:`<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`}`).join('')}</div><div class="blend-result"><span>→</span><strong>${part.z}</strong><span>「${part.word}」</span></div><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark==='˙'?'輕聲記號 ˙ 放在注音最前面。':mark?'聲調放在注音最後面。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
+  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">先聽每個注音，再聽完整字音；聲調跟著完整字音聽。</p><div class="formula">${[...part.z].map((z,i)=>`${i?'<span class="join">＋</span>':''}${TONE_MARKS.includes(z)?`<span class="tone-card">${z}<small>${TONE_OPTIONS.find(t=>t.mark===z).answer}</small></span>`:`<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`}`).join('')}</div><div class="blend-result" id="blend-result"><span>→</span><strong>${part.z}</strong><span>「${part.word}」</span></div><div class="row blend-controls"><button class="primary" id="blend-play">▶ 聽聽怎麼拼</button><button class="secondary" id="blend-stop" hidden>停止播放</button></div><p class="sub" id="blend-status" role="status" aria-live="polite">可以跟著亮起的注音一起念。</p><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark==='˙'?'輕聲記號 ˙ 放在注音最前面。':mark?'聲調記號寫在直排注音的右側；這裡用橫排積木練習。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
   $('#spell-lesson').hidden=false;$('#answer-area').hidden=true;$('#hint').hidden=true;feedback('跟著聽一聽，準備好了就換你試試。');
-  document.querySelectorAll('[data-demo-symbol]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-demo-symbol]').forEach(x=>x.classList.remove('heard'));b.classList.add('heard');soundSymbol(b.dataset.demoSymbol);});
+  document.querySelectorAll('[data-demo-symbol]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-demo-symbol]').forEach(x=>x.classList.remove('heard'));soundSymbol(b.dataset.demoSymbol);b.classList.add('heard');});
+  $('#blend-play').onclick=()=>playBlendLesson(part);$('#blend-stop').onclick=()=>stopAudio();
   $('#blend-sound').onclick=()=>speakWord(part.word);
-  $('#lesson-ready').onclick=()=>{if(game!==g||g.locked)return;stopAudio();state.lessons[g.q.id+':'+g.partIndex]=true;save();if(g.reduced)renderSpell(true);$('#spell-lesson').hidden=true;$('#answer-area').hidden=false;$('#hint').hidden=false;feedback(g.kind==='missing'?'哪個注音不見了？點一個放進空格。':'有多出來的積木，選需要的注音來搭橋。');};
+  $('#lesson-ready').onclick=()=>{if(game!==g||g.locked)return;stopAudio();state.lessons[g.q.id+':'+g.partIndex]=true;save();renderSpell(true);$('#spell-lesson').hidden=true;$('#answer-area').hidden=false;$('#hint').hidden=false;feedback(g.kind==='missing'?'哪個注音不見了？點一個放進空格。':'有多出來的積木，選需要的注音來搭橋。');};
 }
 function feedback(t,success=false){$('#feedback').textContent=t;$('#feedback').classList.toggle('success',success);}
 function shrinkChoices(){
@@ -103,7 +104,7 @@ function shrinkChoices(){
 function wrong(){
   const g=game;if(g.locked||g.partReady)return;g.hadError=true;g.errors++;state.mistakes[questionKey()]=(state.mistakes[questionKey()]||0)+1;save();
   shrinkChoices();g.reduced=true;
-  if(g.mode==='spell'&&g.errors>=2){showLesson(true);return;}
+  if(g.mode==='spell'&&g.errors>=1){showLesson(true);return;}
   if(g.mode==='picture'||g.mode==='detective'){feedback(g.mode==='picture'?'再聽一次，我幫你減少選項。':'再聽正確字音，仔細看哪裡不一樣。');if(g.errors>=2)hint();return;}
   feedback(g.mode==='listen'?'再聽一次，我幫你減少選項。':g.mode==='spell'?'還差一點！可以拿回積木調整，或看拼音示範。':'再聽一次，看看聲音往哪裡走。');
   if(g.errors>=2&&g.mode!=='spell')hint();
@@ -130,5 +131,56 @@ function finish(){
   const reward=stickers.findIndex((_,i)=>!state.stickers.includes(i));if(reward>=0)state.stickers.push(reward);save();chime();confetti();
   screen.innerHTML=`<section class="game result panel"><div class="eyebrow">MISSION COMPLETE</div><div class="result-icon">🎉</div><h1>探險成功！</h1><p>完成 ${completed} 個不同挑戰，獲得 ${completed} 顆星星。<br>${g.first===completed?'這次都自己答對了，太棒了！':`有 ${g.first} 題自己答對，其餘也努力完成了！`}</p><div class="reward">${reward>=0?stickers[reward][0]:'🏆'}</div><h3>${reward>=0?'新朋友：'+stickers[reward][1]:'動物朋友都到齊了！'}</h3><p>${g.sessionMode==='mixed'?'下回合再玩不同挑戰！':'下回合：'+stageName(g.mode,modelFor(g.mode).level)}<br>${state.today.length>=5?'今天的小任務已完成，記得讓眼睛休息。':'再玩一回合，或去看看你的收藏。'}</p><div class="row" style="justify-content:center"><button class="secondary" data-go="collection">看看收藏</button><button class="primary" id="again">再探險一次</button></div><button class="secondary" data-go="home" style="margin-top:16px">回到地圖</button></section>`;$('#again').onclick=()=>start(g.sessionMode);
 }
+
+let blendRun=null;
+function cancelBlendPlayback(){
+  const run=blendRun;if(!run)return;blendRun=null;run.cancelled=true;if(run.cancelStep)run.cancelStep();
+  document.querySelectorAll('[data-demo-symbol],#blend-result,.tone-card').forEach(el=>el.classList.remove('heard','blend-active'));
+  const play=$('#blend-play'),stop=$('#blend-stop'),status=$('#blend-status');
+  if(play){play.disabled=false;play.textContent='↻ 再聽一次';}if(stop)stop.hidden=true;
+  if(status)status.textContent='播放已停止，可以重聽或換你試試。';
+}
+function blendAudioStep(run,source,text){
+  return new Promise(resolve=>{
+    let timer,done=false,media;
+    const finish=ok=>{if(done)return;done=true;clearTimeout(timer);run.cancelStep=null;
+      if(source){media.onended=media.onerror=null;media.pause();if(activeAudio===media)activeAudio=null;}
+      else{media.onend=media.onerror=null;}
+      resolve(ok&&!run.cancelled);
+    };
+    if(source){media=new Audio(source);activeAudio=media;media.onended=()=>finish(true);media.onerror=()=>finish(false);}
+    else{voices();if(!voiceList.length||!('speechSynthesis'in window)){resolve(false);return;}
+      media=new SpeechSynthesisUtterance(text);utterance=media;media.voice=voiceList.find(v=>v.name===state.voice)||voiceList[0];media.lang='zh-TW';media.rate=.65;media.onend=()=>finish(true);media.onerror=()=>finish(false);
+    }
+    run.cancelStep=()=>finish(false);timer=setTimeout(()=>{finish(false);if(!source)speechSynthesis.cancel();},10000);
+    try{if(source)media.play().catch(()=>finish(false));else speechSynthesis.speak(media);}catch{finish(false);}
+  });
+}
+async function playBlendLesson(part){
+  stopAudio();const run={cancelled:false,cancelStep:null},g=game;blendRun=run;
+  const play=$('#blend-play'),stop=$('#blend-stop'),status=$('#blend-status');
+  if(!play){blendRun=null;return;}play.disabled=true;stop.hidden=false;
+  const buttons=[...document.querySelectorAll('[data-demo-symbol]')];
+  let ok=true;
+  for(const button of buttons){
+    if(run.cancelled||game!==g)return;
+    document.querySelectorAll('[data-demo-symbol]').forEach(el=>el.classList.remove('heard'));
+    button.classList.add('heard');status.textContent='聽注音：'+button.dataset.demoSymbol;
+    const source=VOICES[button.dataset.demoSymbol];if(!source){ok=false;break;}
+    ok=await blendAudioStep(run,source,null);
+    if(!ok)break;
+  }
+  if(run.cancelled||game!==g)return;
+  document.querySelectorAll('[data-demo-symbol]').forEach(el=>el.classList.remove('heard'));
+  if(ok){$('#blend-result').classList.add('blend-active');document.querySelectorAll('.tone-card').forEach(el=>el.classList.add('blend-active'));
+    status.textContent='合起來聽「'+part.word+'」，也聽聽它的聲調。';
+    ok=await blendAudioStep(run,null,part.word);
+  }
+  if(run.cancelled||game!==g)return;
+  blendRun=null;document.querySelectorAll('.blend-active').forEach(el=>el.classList.remove('blend-active'));
+  play.disabled=false;play.textContent='↻ 再聽一次';stop.hidden=true;
+  status.textContent=ok?'換你試試！也可以再聽一次。':'聲音暫時無法播放，請點小卡重聽，或請家長陪讀。';
+}
+
 go('home');
 

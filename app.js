@@ -14,7 +14,8 @@ function toast(s){clearTimeout(toastTimer);$('#toast').textContent=s;$('#toast')
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function stopAudio(){if(activeAudio){activeAudio.pause();activeAudio=null;}if('speechSynthesis'in window)speechSynthesis.cancel();}
+function stopAudio(){cancelBlendPlayback();if(activeAudio){activeAudio.pause();activeAudio=null;}if('speechSynthesis'in window)speechSynthesis.cancel();}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAudio();});
 function voices(){voiceList='speechSynthesis'in window?speechSynthesis.getVoices().filter(v=>/^zh[-_]?(TW|Hant)/i.test(v.lang)):[];}
 if('speechSynthesis'in window){voices();speechSynthesis.addEventListener('voiceschanged',()=>{voices();if(page==='parent')parent();});}
 function speakWord(text){stopAudio();if(!('speechSynthesis'in window)){toast('這個瀏覽器沒有語音，請由家長陪讀。');return false;}voices();if(!voiceList.length){toast('尚未找到台灣中文語音，請先到家長頁確認語音。');return false;}utterance=new SpeechSynthesisUtterance(text);utterance.voice=voiceList.find(v=>v.name===state.voice)||voiceList[0];utterance.lang='zh-TW';utterance.rate=.75;utterance.onerror=e=>{if(!['interrupted','canceled'].includes(e.error))toast('語音暫時無法播放，請再按一次或由家長陪讀。');};speechSynthesis.speak(utterance);return true;}

@@ -83,7 +83,7 @@ function partSolved(){
 function showLesson(assisted=true){
   const g=game;if(!g||g.locked||g.mode!=='spell')return;stopAudio();if(assisted)g.hadError=true;
   const part=currentPart(),mark=[...part.z].find(z=>TONE_MARKS.includes(z));
-  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">先聽每個注音，再聽完整字音；聲調跟著完整字音聽。</p><div class="formula">${[...part.z].map((z,i)=>`${i?'<span class="join">＋</span>':''}${TONE_MARKS.includes(z)?`<span class="tone-card">${z}<small>${TONE_OPTIONS.find(t=>t.mark===z).answer}</small></span>`:`<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`}`).join('')}</div><div class="blend-result" id="blend-result"><span>→</span><strong>${part.z}</strong><span>「${part.word}」</span></div><div class="row blend-controls"><button class="primary" id="blend-play">▶ 聽聽怎麼拼</button><button class="secondary" id="blend-stop" hidden>停止播放</button></div><p class="sub" id="blend-status" role="status" aria-live="polite">可以跟著亮起的注音一起念。</p><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark==='˙'?'輕聲記號 ˙ 放在注音最前面。':mark?'聲調記號寫在直排注音的右側；這裡用橫排積木練習。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
+  $('#spell-lesson').innerHTML=`<div class="lesson-card"><div class="eyebrow">一起學拼音</div><h3>先聽注音，再聽「${part.word}」</h3><p class="sub">先聽每個注音，再聽完整字音；聲調跟著完整字音聽。</p><div class="formula">${[...part.z].map((z,i)=>`${i?'<span class="join">＋</span>':''}${TONE_MARKS.includes(z)?`<span class="tone-card">${z}<small>${TONE_OPTIONS.find(t=>t.mark===z).answer}</small></span>`:`<button data-demo-symbol="${z}" aria-label="聽注音 ${z}">${z}<small>🔊</small></button>`}`).join('')}</div><div class="blend-result" id="blend-result"><span class="blend-arrow" aria-hidden="true">→</span><strong aria-label="${part.z}">${[...part.z].map((z,i,a)=>`<span class="blend-letter" aria-hidden="true" style="--blend-x:${(i-(a.length-1)/2)*32}px;--blend-delay:${i*55}ms">${z}</span>`).join('')}</strong><span class="blend-word"><span class="blend-emoji" aria-hidden="true">${g.q.emoji||'⭐'}</span>「${part.word}」</span></div><div class="row blend-controls"><button class="primary" id="blend-play">▶ 聽聽怎麼拼</button><button class="secondary" id="blend-stop" hidden>停止播放</button></div><p class="sub" id="blend-status" role="status" aria-live="polite">可以跟著亮起的注音一起念。</p><button class="secondary" id="blend-sound">🔊 合起來聽：${part.word}</button><p class="sub" style="margin-top:14px">${mark==='˙'?'輕聲記號 ˙ 放在注音最前面。':mark?'聲調記號寫在直排注音的右側；這裡用橫排積木練習。':'這是一聲，注音不加聲調記號。'}</p><button class="primary" id="lesson-ready">換我試試 →</button></div>`;
   $('#spell-lesson').hidden=false;$('#answer-area').hidden=true;$('#hint').hidden=true;feedback('跟著聽一聽，準備好了就換你試試。');
   document.querySelectorAll('[data-demo-symbol]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-demo-symbol]').forEach(x=>x.classList.remove('heard'));soundSymbol(b.dataset.demoSymbol);b.classList.add('heard');});
   $('#blend-play').onclick=()=>playBlendLesson(part);$('#blend-stop').onclick=()=>stopAudio();
@@ -137,6 +137,7 @@ function cancelBlendPlayback(){
   const run=blendRun;if(!run)return;blendRun=null;run.cancelled=true;if(run.cancelStep)run.cancelStep();
   document.querySelectorAll('[data-demo-symbol],#blend-result,.tone-card').forEach(el=>el.classList.remove('heard','blend-active'));
   const play=$('#blend-play'),stop=$('#blend-stop'),status=$('#blend-status');
+  const lesson=$('#spell-lesson');if(lesson)lesson.dataset.blendPhase='ready';
   if(play){play.disabled=false;play.textContent='↻ 再聽一次';}if(stop)stop.hidden=true;
   if(status)status.textContent='播放已停止，可以重聽或換你試試。';
 }
@@ -160,6 +161,7 @@ async function playBlendLesson(part){
   stopAudio();const run={cancelled:false,cancelStep:null},g=game;blendRun=run;
   const play=$('#blend-play'),stop=$('#blend-stop'),status=$('#blend-status');
   if(!play){blendRun=null;return;}play.disabled=true;stop.hidden=false;
+  const lesson=$('#spell-lesson');if(lesson)lesson.dataset.blendPhase='sounds';
   const buttons=[...document.querySelectorAll('[data-demo-symbol]')];
   let ok=true;
   for(const button of buttons){
@@ -172,12 +174,12 @@ async function playBlendLesson(part){
   }
   if(run.cancelled||game!==g)return;
   document.querySelectorAll('[data-demo-symbol]').forEach(el=>el.classList.remove('heard'));
-  if(ok){$('#blend-result').classList.add('blend-active');document.querySelectorAll('.tone-card').forEach(el=>el.classList.add('blend-active'));
+  if(ok){if(lesson)lesson.dataset.blendPhase='blend';$('#blend-result').classList.add('blend-active');document.querySelectorAll('.tone-card').forEach(el=>el.classList.add('blend-active'));
     status.textContent='合起來聽「'+part.word+'」，也聽聽它的聲調。';
     ok=await blendAudioStep(run,null,part.word);
   }
   if(run.cancelled||game!==g)return;
-  blendRun=null;document.querySelectorAll('.blend-active').forEach(el=>el.classList.remove('blend-active'));
+  blendRun=null;if(lesson)lesson.dataset.blendPhase=ok?'done':'ready';document.querySelectorAll('.blend-active').forEach(el=>el.classList.remove('blend-active'));
   play.disabled=false;play.textContent='↻ 再聽一次';stop.hidden=true;
   status.textContent=ok?'換你試試！也可以再聽一次。':'聲音暫時無法播放，請點小卡重聽，或請家長陪讀。';
 }

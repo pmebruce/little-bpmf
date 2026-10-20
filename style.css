@@ -6,3 +6,19 @@
 
 /* Guided blending: retain large touch targets without extra motion. */
 .lesson-card .blend-controls{justify-content:center;flex-wrap:wrap;gap:10px;margin:14px 0 8px}.lesson-card button{min-height:48px}.blend-active{background:#d9efdf!important;outline:3px solid #277c69;border-radius:12px}.lesson-card #blend-status{min-height:2.6em;margin:8px 0}.lesson-card .formula{flex-wrap:wrap}.lesson-card #lesson-ready{display:block;margin:16px auto 0}
+
+/* Brief phonetic cues follow audio; no looping or layout movement. */
+.blend-emoji{display:inline-block;font-size:36px;vertical-align:middle;margin-right:4px;transform-origin:50% 90%}
+.blend-word{display:inline-flex;align-items:center;gap:4px}
+.blend-letter{display:inline-block;white-space:pre}
+.formula button.heard{animation:blend-hop .48s ease-out;outline:3px solid #d7b75b;outline-offset:2px}
+#spell-lesson[data-blend-phase="sounds"] .blend-arrow{color:#d39d34}
+#spell-lesson[data-blend-phase="blend"] .blend-letter{animation:blend-gather .52s cubic-bezier(.2,.8,.3,1) both;animation-delay:var(--blend-delay,0ms)}
+#spell-lesson[data-blend-phase="blend"] .blend-emoji{animation:blend-nod .6s ease-out}
+#spell-lesson[data-blend-phase="blend"] .tone-card{animation:blend-hop .48s ease-out}
+#spell-lesson[data-blend-phase="done"] .blend-result{background:#e2f1da;border-radius:14px}
+#spell-lesson[data-blend-phase="done"] .blend-emoji{animation:blend-nod .5s ease-out}
+@keyframes blend-hop{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-9px) scale(1.08)}70%{transform:translateY(-2px) scale(1.03)}}
+@keyframes blend-gather{from{transform:translateX(var(--blend-x,0px)) translateY(-10px) scale(1.12);opacity:.35}to{transform:translateX(0) translateY(0) scale(1);opacity:1}}
+@keyframes blend-nod{0%,100%{transform:rotate(0) scale(1)}35%{transform:rotate(-8deg) scale(1.12)}70%{transform:rotate(6deg) scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.formula button.heard,#spell-lesson .blend-letter,#spell-lesson .blend-emoji,#spell-lesson .tone-card{animation:none!important;transform:none!important}}

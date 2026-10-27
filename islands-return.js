@@ -4,6 +4,7 @@
  const game=document.currentScript?.dataset.game;
  const ids=['bpmf','pencil','english','dino','painter','science','story','builder','princess','song'];
  if(!ids.includes(game))return;
+ if('serviceWorker' in navigator)navigator.serviceWorker.getRegistration().then(r=>r?.update()).catch(()=>{});
  function mount(){
   if(document.getElementById('islands-return-bar'))return;
   const host=document.createElement('div');host.id='islands-return-bar';

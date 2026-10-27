@@ -1,7 +1,7 @@
-const CACHE='little-bpmf-v2.7-islands-return-v1';
+const CACHE='little-bpmf-v2.7-islands-return-v2';
 const FILES = ['./islands-return.js?v=1','./', './index.html', './style.css', './app.js', './data.js', './curriculum.js', './learning.js', './gameplay.js', './missions.js', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {

@@ -150,7 +150,7 @@ function blendAudioStep(run,source,text){
       resolve(ok&&!run.cancelled);
     };
     if(source){media=new Audio(source);activeAudio=media;media.onended=()=>finish(true);media.onerror=()=>finish(false);}
-    else{voices();if(!voiceList.length||!('speechSynthesis'in window)){resolve(false);return;}
+    else{voices();if((!voiceList.length&&!(window.NaturalVoice&&NaturalVoice.has(text)))||!('speechSynthesis'in window)){resolve(false);return;}
       media=new SpeechSynthesisUtterance(text);utterance=media;media.voice=voiceList.find(v=>v.name===state.voice)||voiceList[0];media.lang='zh-TW';media.rate=.65;media.onend=()=>finish(true);media.onerror=()=>finish(false);
     }
     run.cancelStep=()=>finish(false);timer=setTimeout(()=>{finish(false);if(!source)speechSynthesis.cancel();},10000);

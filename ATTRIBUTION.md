@@ -13,7 +13,7 @@
 
 來源：https://language.moe.gov.tw/001/Upload/files/SITE_CONTENT/M0001/deploy/index.html
 
-本程式將原始 WAV 轉為 40 kbps 單聲道 MP3，嵌入 data.js，符號對照依官方 HTML 的 a1–a37。SVG 筆畫抽取後用於字形、逐筆顯示與圖示；未改變字形路徑。這是獨立學習工具，非教育部官方服務。
+先前版本的注音示範錄音源自教育部素材。現行 37 個單符號音檔由 Microsoft 曉臻（zh-TW-HsiaoChenNeural）合成，內嵌於 data.js。教育部 SVG 筆畫抽取後用於字形、逐筆顯示與圖示；未改變字形路徑。這是獨立學習工具，非教育部官方服務。
 
 ## 字詞注音核對
 

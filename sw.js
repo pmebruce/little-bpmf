@@ -4,7 +4,7 @@ self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.a
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==self.location.origin||e.request.headers.has('range'))return;const isClip=/\/voice-zh\/[^/]+\.mp3$/.test(u.pathname),isNV=/\/voice-zh\/manifest\.json$/.test(u.pathname)||/\/natural-voice\.js$/.test(u.pathname);if(!isClip&&!isNV)return;e.stopImmediatePropagation();
  e.respondWith(caches.open(NV_CACHE).then(async c=>{const hit=await c.match(e.request);if(isClip&&hit)return hit;try{const r=await fetch(e.request);if(r.status===200)c.put(e.request,r.clone());return r}catch(err){if(hit)return hit;throw err}}))});
 /* end natural-voice */
-const CACHE='little-bpmf-v2.7-islands-return-v3-nv1';
+const CACHE='little-bpmf-v2.8-hsiaochen-symbols-nv1';
 const FILES = ['./islands-return.js?v=1','./', './index.html', './style.css', './app.js', './data.js', './curriculum.js', './learning.js', './gameplay.js', './missions.js', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
